@@ -9,8 +9,6 @@ unsigned char led[8];
 unsigned long int rotation_time = 1;
 unsigned long int time_count = 1;
 
-unsigned long test = 0;
-
 
 void init_timer0() {
     TCCR0 = 0x00;       // Stop Timer/Counter0
@@ -42,9 +40,11 @@ ISR(TIMER0_OVF0_vect) {
  * rising edge trigger
  */
 ISR (IO_PINS_vect) {
-	//rotation_time = time_count;
+	if (time_count > 2) {
+		rotation_time = time_count;
 
-	//time_count = 1;
+		time_count = 1;
+	}
 }
 
 void set_leds() {
@@ -64,7 +64,7 @@ void set_leds() {
 
 void refresh (unsigned char current_x) {
 
-	unsigned long the_one_on = current_x / 8;
+	unsigned long the_one_on = 8 * current_x / X_RES;
 
 	for (int i = 0; i < 8; i++) {
 		if (the_one_on == i + 1) {
@@ -102,15 +102,6 @@ int main() {
     	else {
 			refresh(current_x);
     	}
-
-    	test++;
-
-    	if (test > 800) {
-    		rotation_time = time_count;
-			time_count = 1;
-			test = 0;
-    	}
-
     }
 
     return 0;
