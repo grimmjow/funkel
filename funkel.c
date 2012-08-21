@@ -3,9 +3,9 @@
 #include <util/delay.h>
 
 #define TIMER_INIT_VAL    (255 - 15)    // 1ms
-#define X_RES             64
+#define X_RES             16
 
-unsigned char led[8];
+unsigned char led[16];
 unsigned long int rotation_time = 1;
 unsigned long int time_count = 1;
 
@@ -49,25 +49,38 @@ ISR (IO_PINS_vect) {
 
 void set_leds() {
 
-	PORTA = (led[6] << PA2)
-			| (led[7] << PA3)
-			| (led[0] << PA4)
-	        | (led[1] << PA5)
-	        | (led[2] << PA6)
-	        | (led[3] << PA7);
+	PORTA = (led[0] << PA0)
+			| (led[1] << PA1)
+			| (led[2] << PA2)
+			| (led[3] << PA3)
+	        | (led[4] << PA4)
+	        | (led[5] << PA5)
+	        | (led[6] << PA6)
+	        | (led[7] << PA7);
 
-	PORTB = (1 << PB3)
-	        | (led[4] << PB4)
-	        | (led[5] << PB5);
+	PORTB |= (1 << PB4);
+	PORTB = 0xff ^ ((1 << PB4) | (1 << PB5));
+
+	PORTA = (led[8] << PA0)
+				| (led[9] << PA1)
+				| (led[10] << PA2)
+				| (led[11] << PA3)
+		        | (led[12] << PA4)
+		        | (led[13] << PA5)
+		        | (led[14] << PA6)
+		        | (led[15] << PA7);
+
+	PORTB |= (1 << PB5);
+	PORTB = 0xff ^ ((1 << PB4) | (1 << PB5));
 
 }
 
 void refresh (unsigned char current_x) {
 
-	unsigned long the_one_on = 8 * current_x / X_RES;
+	unsigned long the_one_on = current_x;
 
-	for (int i = 0; i < 8; i++) {
-		if (the_one_on == i + 1) {
+	for (int i = 0; i < 16; i++) {
+		if (the_one_on == i) {
 			led[i] = 1;
 		}
 		else {
@@ -83,9 +96,9 @@ int main() {
     init_interupt();
     init_timer0();
 
-    DDRA  = 0xF0 | (1 << PA2) | (1 << PA3);
+    DDRA  = 0xFF;
     PORTA = 0xFF;
-    DDRB  = 0xF0;
+    DDRB  = (1 << PB4) | (1 << PB5);
     PORTB = 0xFF;
 
     sei();
