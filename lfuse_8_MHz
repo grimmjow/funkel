@@ -1,0 +1,1 @@
+sudo /usr/bin/avrdude -pt26 -cavrisp2 -Pusb -U lfuse:w:0b11100100:m

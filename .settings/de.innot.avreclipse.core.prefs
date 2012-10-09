@@ -1,5 +1,5 @@
-#Tue Apr 17 21:26:03 CEST 2012
-avrtarget/ClockFrequency=16000000
+#Tue Oct 09 23:15:14 CEST 2012
+avrtarget/ClockFrequency=8000000
 avrtarget/ExtRAMSize=0
 avrtarget/ExtendedRAM=false
 avrtarget/MCUType=attiny26
@@ -11,6 +11,11 @@ avrtarget/avrdude/EEPROMFile=
 avrtarget/avrdude/EEPROMFromConfig=true
 avrtarget/avrdude/FlashFile=
 avrtarget/avrdude/FlashFromConfig=true
+avrtarget/avrdude/Fuses/ByteValues=228\:23
+avrtarget/avrdude/Fuses/FileName=
+avrtarget/avrdude/Fuses/MCUid=attiny26
+avrtarget/avrdude/Fuses/UseFile=false
+avrtarget/avrdude/Fuses/Write=false
 avrtarget/avrdude/NoChipErase=false
 avrtarget/avrdude/NoSigCheck=true
 avrtarget/avrdude/NoVerify=false

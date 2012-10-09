@@ -24,8 +24,8 @@ void init_interupt() {
 	TCCR1A &= ~((1 << COM1B0) | (1 << COM1B1));
 
 	GIMSK |= (1<<PCIE0);
+	MCUCR |= (1<<ISC00) | (1<<ISC01);
 	GIMSK |= (1<<INT0);      // turn on interrupts!
-	MCUCR = (MCUCR & ~(1<<ISC00)) | (1<<ISC01);
 
 }
 
