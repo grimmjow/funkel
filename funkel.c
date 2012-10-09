@@ -3,9 +3,11 @@
 #include <util/delay.h>
 
 #define TIMER_INIT_VAL    (255 - 15)    // 1ms
-#define X_RES             16
+#define RES_X             16
+#define RES_Y             1
+#define RES_Z             16
 
-unsigned char led[16];
+unsigned char led[RES_X];
 unsigned long int rotation_time = 1;
 unsigned long int time_count = 1;
 
@@ -14,7 +16,7 @@ void init_timer0() {
     TCCR0 = 0x00;       // Stop Timer/Counter0
     TCNT0 = TIMER_INIT_VAL;   // initial value
     TIMSK = _BV(TOIE0); // Overflow Interrupt Enable
-    TCCR0 = (1 << CS00) | (1 << CS02);        // 16.000.000/1.024
+    TCCR0 = (1 << CS00) | (1 << CS01);        // 16.000.000/64
 }
 
 void init_interupt() {
@@ -23,7 +25,7 @@ void init_interupt() {
 
 	GIMSK |= (1<<PCIE0);
 	GIMSK |= (1<<INT0);      // turn on interrupts!
-	MCUCR |= (1<<ISC00) | (1<<ISC01);
+	MCUCR = (MCUCR & ~(1<<ISC00)) | (1<<ISC01);
 
 }
 
@@ -40,8 +42,8 @@ ISR(TIMER0_OVF0_vect) {
  * rising edge trigger
  */
 ISR (IO_PINS_vect) {
-	if (time_count > 2) {
-		rotation_time = time_count;
+	if (time_count > 50) {
+		rotation_time = (rotation_time + time_count) / 2;
 
 		time_count = 1;
 	}
@@ -49,41 +51,38 @@ ISR (IO_PINS_vect) {
 
 void set_leds() {
 
-	PORTA = (led[0] << PA0)
-			| (led[1] << PA1)
-			| (led[2] << PA2)
-			| (led[3] << PA3)
-	        | (led[4] << PA4)
-	        | (led[5] << PA5)
-	        | (led[6] << PA6)
-	        | (led[7] << PA7);
+	PORTA = (led[1] << PA0)
+			| (led[3] << PA1)
+			| (led[5] << PA2)
+			| (led[7] << PA3)
+	        | (led[9] << PA4)
+	        | (led[11] << PA5)
+	        | (led[13] << PA6)
+	        | (led[15] << PA7);
 
 	PORTB |= (1 << PB4);
 	PORTB = 0xff ^ ((1 << PB4) | (1 << PB5));
 
-	PORTA = (led[8] << PA0)
-				| (led[9] << PA1)
-				| (led[10] << PA2)
-				| (led[11] << PA3)
-		        | (led[12] << PA4)
-		        | (led[13] << PA5)
-		        | (led[14] << PA6)
-		        | (led[15] << PA7);
+	PORTA = (led[0] << PA0)
+				| (led[2] << PA1)
+				| (led[4] << PA2)
+				| (led[6] << PA3)
+		        | (led[8] << PA4)
+		        | (led[10] << PA5)
+		        | (led[12] << PA6)
+		        | (led[14] << PA7);
 
 	PORTB |= (1 << PB5);
 	PORTB = 0xff ^ ((1 << PB4) | (1 << PB5));
 
 }
 
-void refresh (unsigned char current_x) {
+void refresh (unsigned char current_z) {
 
-	unsigned long the_one_on = current_x;
-
-	for (int i = 0; i < 16; i++) {
-		if (the_one_on == i) {
+	for (int i = 0; i < RES_X; i++) {
+		if ((current_z < 8) == (i < 8)) {
 			led[i] = 1;
-		}
-		else {
+		} else {
 			led[i] = 0;
 		}
 	}
@@ -103,17 +102,18 @@ int main() {
 
     sei();
 
-    unsigned long last_x = X_RES + 1;
-    unsigned long current_x;
+    unsigned long last_z = RES_Z + 1;
+    unsigned long current_z;
 
     while (1) {
-    	current_x = X_RES * time_count / rotation_time;
+    	current_z = RES_Z * time_count / rotation_time;
 
-    	if (current_x == last_x) {
+    	if (current_z == last_z) {
     		asm("sleep"::);
     	}
     	else {
-			refresh(current_x);
+    		last_z = current_z;
+			refresh(current_z);
     	}
     }
 
