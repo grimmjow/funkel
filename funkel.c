@@ -2,7 +2,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-#define TIMER_INIT_VAL    (255 - 15)    // 1ms
+#define TIMER_INIT_VAL    255    // 1ms
 #define RES_X             16
 #define RES_Y             1
 #define RES_Z             32
@@ -51,7 +51,7 @@ void init_timer0() {
     TCCR0 = 0x00;       // Stop Timer/Counter0
     TCNT0 = TIMER_INIT_VAL;   // initial value
     TIMSK = _BV(TOIE0); // Overflow Interrupt Enable
-    TCCR0 = (1 << CS00) | (1 << CS01);        // 16.000.000/64
+    TCCR0 = (1 << CS02) | (1 << CS00);        // 8.000.000/1.024
 }
 
 void init_interupt() {
@@ -73,14 +73,18 @@ ISR(TIMER0_OVF0_vect) {
     TCNT0 = TIMER_INIT_VAL;  // Clear Time/Counter0
 }
 
+unsigned long int get_current_time() {
+	return time_count * TIMER_INIT_VAL + (TIMER_INIT_VAL - TCNT0);
+}
+
 /*
  * rising edge trigger
  */
 ISR (IO_PINS_vect) {
-	if (time_count > 50) {
-		rotation_time = (rotation_time + time_count) / 2;
+	if (time_count > 200) {
+		rotation_time = (rotation_time + get_current_time()) / 2;
 
-		time_count = 1;
+		time_count = 0;
 	}
 }
 
@@ -122,7 +126,7 @@ int main() {
     unsigned long current_z;
 
     while (1) {
-    	current_z = RES_Z * time_count / rotation_time;
+    	current_z = RES_Z * get_current_time() / rotation_time;
 
     	if (current_z == last_z) {
     		asm("sleep"::);
