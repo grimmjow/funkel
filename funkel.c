@@ -5,11 +5,46 @@
 #define TIMER_INIT_VAL    (255 - 15)    // 1ms
 #define RES_X             16
 #define RES_Y             1
-#define RES_Z             16
+#define RES_Z             32
 
-unsigned char led[RES_X];
+unsigned char led[RES_X/8];
 unsigned long int rotation_time = 1;
 unsigned long int time_count = 1;
+unsigned char bild[RES_Z][RES_X/8] =
+                          {
+                        			{0b10000000, 0b00000001},
+                        			{0b10000000, 0b10000000},
+                        			{0b01000000, 0b10000000},
+                        			{0b01000000, 0b01000000},
+                        			{0b00100000, 0b01000000},
+                        			{0b00100000, 0b00100000},
+                        			{0b00010000, 0b00100000},
+                        			{0b00010000, 0b00010000},
+                        			{0b00001000, 0b00010000},
+                        			{0b00001000, 0b00001000},
+                        			{0b00000100, 0b00001000},
+                        			{0b00000100, 0b00000100},
+                        			{0b00000010, 0b00000100},
+                        			{0b00000010, 0b00000010},
+                        			{0b00000001, 0b00000010},
+                        			{0b00000001, 0b00000001},
+                        			{0b10000000, 0b00000001},
+                        			{0b10000000, 0b10000000},
+                        			{0b01000000, 0b10000000},
+                        			{0b01000000, 0b01000000},
+                        			{0b00100000, 0b01000000},
+                        			{0b00100000, 0b00100000},
+                        			{0b00010000, 0b00100000},
+                        			{0b00010000, 0b00010000},
+                        			{0b00001000, 0b00010000},
+                        			{0b00001000, 0b00001000},
+                        			{0b00000100, 0b00001000},
+                        			{0b00000100, 0b00000100},
+                        			{0b00000010, 0b00000100},
+                        			{0b00000010, 0b00000010},
+                        			{0b00000001, 0b00000010},
+                        			{0b00000001, 0b00000001}
+                          };
 
 
 void init_timer0() {
@@ -51,26 +86,12 @@ ISR (IO_PINS_vect) {
 
 void set_leds() {
 
-	PORTA = (led[1] << PA0)
-			| (led[3] << PA1)
-			| (led[5] << PA2)
-			| (led[7] << PA3)
-	        | (led[9] << PA4)
-	        | (led[11] << PA5)
-	        | (led[13] << PA6)
-	        | (led[15] << PA7);
+	PORTA = led[1];
 
 	PORTB |= (1 << PB4);
 	PORTB = 0xff ^ ((1 << PB4) | (1 << PB5));
 
-	PORTA = (led[0] << PA0)
-				| (led[2] << PA1)
-				| (led[4] << PA2)
-				| (led[6] << PA3)
-		        | (led[8] << PA4)
-		        | (led[10] << PA5)
-		        | (led[12] << PA6)
-		        | (led[14] << PA7);
+	PORTA = led[0];
 
 	PORTB |= (1 << PB5);
 	PORTB = 0xff ^ ((1 << PB4) | (1 << PB5));
@@ -79,13 +100,8 @@ void set_leds() {
 
 void refresh (unsigned char current_z) {
 
-	for (int i = 0; i < RES_X; i++) {
-		if ((current_z < 8) == (i < 8)) {
-			led[i] = 1;
-		} else {
-			led[i] = 0;
-		}
-	}
+	led[0] = bild[current_z][0];
+	led[1] = bild[current_z][1];
 
 	set_leds();
 
