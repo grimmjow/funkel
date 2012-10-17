@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <avr/pgmspace.h>
 
 #define TIMER_INIT_VAL    255    // 1ms
 #define RES_X             16
@@ -10,7 +11,7 @@
 unsigned char led[RES_X/8];
 unsigned long int rotation_time = 1;
 unsigned long int time_count = 1;
-unsigned char bild[RES_Z][RES_X/8] =
+unsigned char bild[RES_Z][RES_X/8] PROGMEM =
                           {
                         			{0b10000000, 0b00000001},
                         			{0b10000000, 0b10000000},
@@ -104,8 +105,8 @@ void set_leds() {
 
 void refresh (unsigned char current_z) {
 
-	led[0] = bild[current_z][0];
-	led[1] = bild[current_z][1];
+	led[0] = pgm_read_byte(&(bild[current_z][0]));
+	led[1] = pgm_read_byte(&(bild[current_z][1]));
 
 	set_leds();
 
