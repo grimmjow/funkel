@@ -48,13 +48,13 @@ for imgx in range(1, size[0]):
     for imgy in range(1, size[1]):
         a = imgx - (size[0] / 2)
         b = imgy - (size[1] / 2)
-        c = math.sqrt(math.pow(imgx, 2) * math.pow(imgy, 2))
+        c = math.sqrt(math.pow(imgx, 2) + math.pow(imgy, 2))
 
         if c > radius:
             continue
 
-        z = int(round((360 + math.degrees(math.sin(a/c))) % 360 / resolution["z"]))
-        x = int(round(c / resolution["x"]))
+        z = int(round(((360 + math.degrees(math.sin(a/c))) % 360) * resolution["z"] / 360))
+        x = int(round(c * resolution["x"] / radius))
         output[z][x][0] += pix[imgx, imgy]
         output[z][x][1] += 1
 
