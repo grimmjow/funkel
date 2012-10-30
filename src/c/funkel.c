@@ -3,50 +3,13 @@
 #include <util/delay.h>
 #include <avr/pgmspace.h>
 
+#include "imgdata.h"
+
 #define TIMER_INIT_VAL    255    // 1ms
-#define RES_X             16
-#define RES_Y             1
-#define RES_Z             32
 
 unsigned char led[RES_X/8];
 unsigned long int rotation_time = 1;
 unsigned long int time_count = 1;
-unsigned char bild[RES_Z][RES_X/8] PROGMEM =
-                          {
-                        			{0b11011111, 0b10001110},
-                        			{0b11011111, 0b10000010},
-                        			{0b11011111, 0b10000010},
-                        			{0b11011111, 0b10000011},
-                        			{0b11010011, 0b10000000},
-                        			{0b11010011, 0b10000000},
-                        			{0b11010011, 0b10000000},
-                        			{0b11010011, 0b10000000},
-                        			{0b11010011, 0b10000000},
-                        			{0b11010011, 0b10000000},
-                        			{0b11010011, 0b10000000},
-                        			{0b11010011, 0b10000000},
-                        			{0b11010011, 0b10001110},
-                        			{0b11010011, 0b10000010},
-                        			{0b11010011, 0b10000010},
-                        			{0b11011111, 0b10001110},
-
-                        			{0b11010011, 0b10001111},
-                        			{0b11010011, 0b10001110},
-                        			{0b11010011, 0b10001010},
-                        			{0b11010011, 0b10001010},
-                        			{0b11010000, 0b10000010},
-                        			{0b11010000, 0b10000010},
-                        			{0b11010000, 0b10000010},
-                        			{0b11010000, 0b10000010},
-                        			{0b11010000, 0b10000010},
-                        			{0b11010000, 0b10000010},
-                        			{0b11010000, 0b10000010},
-                        			{0b11010000, 0b10000010},
-                        			{0b11011110, 0b10000010},
-                        			{0b11010010, 0b10000010},
-                        			{0b11010010, 0b10000010},
-                        			{0b11010010, 0b10000010}
-                          };
 
 
 void init_timer0() {
@@ -106,8 +69,8 @@ void set_leds() {
 
 void refresh (unsigned char current_z) {
 
-	led[0] = pgm_read_byte(&(bild[current_z][1]));
-	led[1] = pgm_read_byte(&(bild[current_z][0]));
+	led[0] = pgm_read_byte(&(imgdata[current_z][1]));
+	led[1] = pgm_read_byte(&(imgdata[current_z][0]));
 
 	set_leds();
 
