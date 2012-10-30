@@ -1,0 +1,9 @@
+#ifndef IMGDATA_H_
+#define IMGDATA_H_
+
+#define RES_X             $RES_X
+#define RES_Z             $RES_Z
+
+unsigned char imgdata[RES_Z][RES_X/8] PROGMEM = $IMGDATA;
+
+#endif /*IMGDATA_H_*/
