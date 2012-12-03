@@ -30,7 +30,7 @@ cp ../src/c/imgdata.h.template . || exit 1
 python ../src/python/convert.py -img:$file -x:$x -z:$z || exit 1
 
 avr-gcc -I/usr/lib/avr/include -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields \
-	-mmcu=attiny26 -DF_CPU=8000000UL -MMD -MP -MF"funkel.d" -MT"funkel.d" -c -o"funkel.o" "funkel.c" || exit 1
+	-mmcu=attiny461a -DF_CPU=8000000UL -MMD -MP -MF"funkel.d" -MT"funkel.d" -c -o"funkel.o" "funkel.c" || exit 1
 
 avr-gcc -Wl,-Map,funkel.map -mmcu=attiny26 -o"funkel.elf"  ./funkel.o || exit 1
 
@@ -39,7 +39,7 @@ avr-objcopy -R .eeprom -O ihex funkel.elf  "funkel.hex" || exit 1
 avr-size --format=avr --mcu=attiny26 funkel.elf || exit 1
 
 if [ "$noflash" != "1" ]; then
-    sudo /usr/bin/avrdude -pt26 -cavrisp2 -Pusb -F -Uflash:w:funkel.hex:a || exit 1
+    sudo /usr/bin/avrdude -pt461 -cavrisp2 -Pusb -F -Uflash:w:funkel.hex:a || exit 1
 
     if [ "$debug" != "1" ]; then
         rm funkel.* imgdata.* || exit 1
