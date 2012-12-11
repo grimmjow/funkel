@@ -24,8 +24,7 @@ void init_interupt() {
     // disable alternate functions
     TCCR1A &= ~((1 << COM1B0) | (1 << COM1B1));
 
-    GIMSK |= (1<<PCIE0);
-    MCUCR |= (1<<ISC00) | (1<<ISC01);
+    MCUCR |= (1<<ISC00) | (1<<ISC01); // rising edge
     GIMSK |= (1<<INT0); // turn on interrupts!
 
 }
@@ -50,10 +49,12 @@ ISR(TIMER0_OVF_vect) {
  */
 ISR (INT0_vect) {
 
-    if (time_count > 2) {
+	// damit nich an einem vorbeilaufen an der ir-led mehrmals getriggert wird
+    if (TCNT0L > 10 || time_count > 0) {
         rotation_time = (rotation_time + get_current_time()) / 2;
 
         time_count = 0;
+        TCNT0L = 0;
     }
 
 }
