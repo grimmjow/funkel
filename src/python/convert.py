@@ -62,12 +62,14 @@ for imgx in range(1, size[0]):
         if c > radius or c == 0:
             continue
 
-        deg = math.degrees(math.asin(a/c))
-        if b > 0:
-            if a > 0:
-                deg += 90
-            else:
-                deg -= 90
+        deg = math.degrees(math.asin(abs(a)/c))
+
+        if (a > 0 and b < 0):
+            deg = deg * -1 + 180
+        if (a < 0 and b < 0):
+            deg += 180
+        if (a < 0  and b > 0):
+            deg *= -1
 
         z = int(round(((360 + deg) % 360) * (resolution["z"]-1) / 360))
         x = int(round(c * (resolution["x"]-1) / radius))
@@ -80,6 +82,10 @@ for z in range(resolution["z"]):
         if output[z][x][1] > 0:
             output[z][x][0] = output[z][x][0] / output[z][x][1]
         output[z][x][0] = int(round(output[z][x][0] / 128))
+
+        sys.stdout.write(str(output[z][x][0]))
+    print ""
+print ""
 
 # export array
 imgdata = "{\n"
