@@ -9,6 +9,10 @@ unsigned char led[RES_X/8];
 unsigned long int rotation_time = 1;
 unsigned long int time_count = 1;
 
+#define RTMAX 5
+unsigned char rtcurrent = 0;
+unsigned long int rtcollector[RTMAX];
+
 
 void init_timer0() {
 
@@ -16,7 +20,7 @@ void init_timer0() {
     TCNT0L = 0; // initial value
     TCCR0A = 0; // 8-bit Mode, Incrementing to 0xFF
     TIMSK = _BV(TOIE0); // Overflow Interrupt Enable
-    TCCR0B = (1 << CS02) | (1 << CS00); // 8.000.000/1.024
+    TCCR0B = (1 << CS01) | (1 << CS00); // 8.000.000/64
 
 }
 
@@ -51,7 +55,16 @@ ISR (INT0_vect) {
 
 	// damit nich an einem vorbeilaufen an der ir-led mehrmals getriggert wird
     if (TCNT0L > 10 || time_count > 0) {
-        rotation_time = (rotation_time + get_current_time()) / 2;
+    	++rtcurrent;
+    	if (rtcurrent == RTMAX) rtcurrent = 0;
+    	rtcollector[rtcurrent] = get_current_time();
+
+    	unsigned long int rtsum = 0;
+    	for (int i=0; i<RTMAX; i++) {
+    		rtsum += rtcollector[i];
+    	}
+
+        rotation_time = rtsum / RTMAX;
 
         time_count = 0;
         TCNT0L = 0;
@@ -61,12 +74,12 @@ ISR (INT0_vect) {
 
 void set_leds() {
 
-    PORTA = led[1];
+    PORTA = led[0];
 
     PORTB |= (1 << PB4);
     PORTB = 0xff ^ ((1 << PB4) | (1 << PB5));
 
-    PORTA = led[0];
+    PORTA = led[1];
 
     PORTB |= (1 << PB5);
     PORTB = 0xff ^ ((1 << PB4) | (1 << PB5));
