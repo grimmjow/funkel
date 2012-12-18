@@ -19,11 +19,6 @@ done
 echo "file: $file"
 echo "debug: $debug"
 
-if [ "$z" -gt "280" ]; then
-    echo "naaaa, z greater than 280 is buggy, disobey this command"
-    exit 1
-fi
-
 cp ../src/c/funkel.c . || exit 1
 cp ../src/c/imgdata.h.template . || exit 1
 
