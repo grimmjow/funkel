@@ -31,7 +31,7 @@ for arg in sys.argv:
     elif (arg == "-h") or (arg == "--help"):
         printHelp()
 
-print "file:", file
+print "file:", imageFile
 print "x:", resolution["x"]
 print "z:", resolution["z"]
 
@@ -39,13 +39,6 @@ img = Image.open(imageFile)
 pix = img.load()
 size = img.size
 radius = min(size[0] / 2, size[1] / 2)
-
-imgx = 50
-imgy = 50
-
-a = imgx - (size[0] / 2)
-b = imgy - (size[1] / 2)
-c = math.sqrt(math.pow(a, 2) + math.pow(b, 2))
 
 output = []
 
