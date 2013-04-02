@@ -125,7 +125,7 @@ int main() {
 
     DDRA  = 0xFF;
     PORTA = 0xFF;
-    DDRB  = (1 << PB4) | (1 << PB5);
+    DDRB  = (1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5);
     PORTB = 0xFF;
 
     sei();
