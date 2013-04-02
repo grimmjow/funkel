@@ -2,7 +2,7 @@
 
 debug=0
 file=test.jpg
-x=16
+x=32
 z=32
 noflash=0
 while getopts "ndf:x:z:" OPTION

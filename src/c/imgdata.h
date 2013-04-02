@@ -1,7 +1,7 @@
 #ifndef IMGDATA_H_
 #define IMGDATA_H_
 
-#define RES_X             16
+#define RES_X             32
 #define RES_Z             32
 
 unsigned char imgdata[RES_Z][RES_X/8] PROGMEM =

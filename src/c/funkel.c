@@ -46,6 +46,10 @@ ISR(TIMER0_OVF_vect) {
 
     time_count++;
 
+    if (time_count > 15) {
+    	time_count = 0;
+    }
+
 }
 
 /*
@@ -54,21 +58,21 @@ ISR(TIMER0_OVF_vect) {
 ISR (INT0_vect) {
 
 	// damit nich an einem vorbeilaufen an der ir-led mehrmals getriggert wird
-    if (TCNT0L > 10 || time_count > 0) {
-    	++rtcurrent;
-    	if (rtcurrent == RTMAX) rtcurrent = 0;
-    	rtcollector[rtcurrent] = get_current_time();
-
-    	unsigned long int rtsum = 0;
-    	for (int i=0; i<RTMAX; i++) {
-    		rtsum += rtcollector[i];
-    	}
-
-        rotation_time = rtsum / RTMAX;
-
-        time_count = 0;
-        TCNT0L = 0;
-    }
+//    if (TCNT0L > 10 || time_count > 0) {
+//    	++rtcurrent;
+//    	if (rtcurrent == RTMAX) rtcurrent = 0;
+//    	rtcollector[rtcurrent] = get_current_time();
+//
+//    	unsigned long int rtsum = 0;
+//    	for (int i=0; i<RTMAX; i++) {
+//    		rtsum += rtcollector[i];
+//    	}
+//
+//        rotation_time = rtsum / RTMAX;
+//
+//        time_count = 0;
+//        TCNT0L = 0;
+//    }
 
 }
 
@@ -77,19 +81,39 @@ void set_leds() {
     PORTA = led[0];
 
     PORTB |= (1 << PB4);
-    PORTB = 0xff ^ ((1 << PB4) | (1 << PB5));
+    PORTB = 0xff ^ ((1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5));
 
     PORTA = led[1];
 
     PORTB |= (1 << PB5);
-    PORTB = 0xff ^ ((1 << PB4) | (1 << PB5));
+    PORTB = 0xff ^ ((1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5));
+
+    PORTA = led[2];
+
+    PORTB |= (1 << PB3);
+    PORTB = 0xff ^ ((1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5));
+
+    PORTA = led[1];
+
+    PORTB |= (1 << PB2);
+    PORTB = 0xff ^ ((1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5));
 
 }
 
 void refresh (unsigned char current_z) {
 
-    led[0] = pgm_read_byte(&(imgdata[current_z][1]));
-    led[1] = pgm_read_byte(&(imgdata[current_z][0]));
+	//    led[0] = pgm_read_byte(&(imgdata[current_z][3]));
+	//    led[1] = pgm_read_byte(&(imgdata[current_z][2]));
+	//    led[2] = pgm_read_byte(&(imgdata[current_z][1]));
+	//    led[3] = pgm_read_byte(&(imgdata[current_z][0]));
+
+	unsigned char lisa = 0;
+
+	lisa = 1 << (time_count / 2);
+	led[0] = lisa;
+	led[1] = lisa;
+	led[2] = lisa;
+	led[3] = lisa;
 
     set_leds();
 
@@ -108,6 +132,8 @@ int main() {
 
     unsigned long last_z = RES_Z + 1;
     unsigned long current_z;
+
+    rotation_time = 0xFF * 16;
 
     while (1) {
         current_z = RES_Z * get_current_time() / rotation_time;
