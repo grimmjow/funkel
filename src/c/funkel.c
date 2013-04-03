@@ -13,6 +13,10 @@ unsigned long int time_count = 1;
 unsigned char rtcurrent = 0;
 unsigned long int rtcollector[RTMAX];
 
+#define BANK_0 PB4
+#define BANK_1 PB5
+#define BANK_2 PB3
+#define BANK_3 PB2
 
 void init_timer0() {
 
@@ -76,27 +80,30 @@ ISR (INT0_vect) {
 
 }
 
+void lower_output_ports() {
+
+    PORTB = 0xff ^ ((1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5));
+
+}
+
+void apply_bank_change(int bank, int led_index) {
+
+	// set PORTA output pins
+    PORTA = led[led_index];
+
+    // signal bank apply
+    PORTB |= (1 << bank);
+
+    // reset bank apply signal
+    lower_output_ports();
+}
+
 void set_leds() {
 
-    PORTA = led[0];
-
-    PORTB |= (1 << PB4);
-    PORTB = 0xff ^ ((1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5));
-
-    PORTA = led[1];
-
-    PORTB |= (1 << PB5);
-    PORTB = 0xff ^ ((1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5));
-
-    PORTA = led[2];
-
-    PORTB |= (1 << PB3);
-    PORTB = 0xff ^ ((1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5));
-
-    PORTA = led[1];
-
-    PORTB |= (1 << PB2);
-    PORTB = 0xff ^ ((1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5));
+	apply_bank_change(BANK_0, 0);
+	apply_bank_change(BANK_1, 1);
+	apply_bank_change(BANK_2, 2);
+	apply_bank_change(BANK_3, 4);
 
 }
 
