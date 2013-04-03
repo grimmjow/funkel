@@ -1,42 +1,67 @@
 #!/bin/sh
 
+set -e
+
 debug=0
 file=test.jpg
 x=32
 z=32
 noflash=0
-while getopts "ndf:x:z:" OPTION
+
+# target device specification
+mcu=attiny461a
+dude_mcu=t461
+
+# prgramm name
+program=funkel
+
+usage() {
+
+	echo "usage: $0 [options]"
+	echo ""
+	echo "Options:"
+	echo "-x, -z    : set resolution (default: z: 32, x: 32)"
+	echo "-d        : debug"
+	echo "-f        : image to display"
+	echo "-p        : programm name (default: funkel)"
+	echo "-n        : no flash, just build"
+
+}
+
+while getopts "ndf:x:z:p:" OPTION
 do
   case $OPTION in
     d)  debug=1;;
     f)  file=${OPTARG};;
     x)  x=${OPTARG};;
     z)  z=${OPTARG};;
+    p)  program=${OPTARG};;
     n)  noflash=1;;
+    *) usage; exit 0;;
   esac
 done
 
 echo "file: $file"
 echo "debug: $debug"
 
-cp ../src/c/funkel.c . || exit 1
-cp ../src/c/imgdata.h.template . || exit 1
+cp ../src/c/${program}.c .
+cp ../src/c/imgdata.h.template .
 
-python ../src/python/convert.py -img:$file -x:$x -z:$z || exit 1
+python ../src/python/convert.py -img:$file -x:$x -z:$z
 
 avr-gcc -I/usr/lib/avr/include -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields \
-	-mmcu=attiny461a -DF_CPU=8000000UL -MMD -MP -MF"funkel.d" -MT"funkel.d" -c -o"funkel.o" "funkel.c" || exit 1
+	-mmcu=${mcu} -DF_CPU=8000000UL -MMD -MP -MF"${program}.d" -MT"${program}.d" -c -o"${program}.o" "${program}.c"
 
-avr-gcc -Wl,-Map,funkel.map -mmcu=attiny461a -o"funkel.elf"  ./funkel.o || exit 1
+avr-gcc -Wl,-Map,${program}.map -mmcu=${mcu} -o"${program}.elf"  ./${program}.o
 
-avr-objcopy -R .eeprom -O ihex funkel.elf  "funkel.hex" || exit 1
+avr-objcopy -R .eeprom -O ihex ${program}.elf  "${program}.hex"
 
-avr-size --format=avr --mcu=attiny461a funkel.elf || exit 1
+avr-size --format=avr --mcu=${mcu} ${program}.elf
 
 if [ "$noflash" != "1" ]; then
-    sudo /usr/bin/avrdude -pt461a -cavrisp2 -Pusb -F -Uflash:w:funkel.hex:a || exit 1
+    sudo /usr/bin/avrdude -p${dude_mcu} -cavrisp2 -Pusb -F -Uflash:w:${program}.hex:a
 
     if [ "$debug" != "1" ]; then
-        rm funkel.* imgdata.* || exit 1
+        rm ${program}.* imgdata.*
     fi
 fi
