@@ -79,22 +79,17 @@ ISR (INT0_vect) {
 
 }
 
-void lower_output_ports() {
-
-    PORTB = 0xff ^ ((1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5));
-
-}
-
 void apply_bank_change(int bank, int led_index) {
 
-	// set PORTA output pins
+	// apply data from led array to PORTA pins
     PORTA = led[led_index];
 
-    // signal bank apply
+    // switch (on) bank apply signal
     PORTB |= (1 << bank);
 
-    // reset bank apply signal
-    lower_output_ports();
+    // switch (off) reset bank apply signal
+    PORTB ^= (1 << bank);
+
 }
 
 void set_leds() {
