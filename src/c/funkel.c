@@ -29,11 +29,10 @@ void init_timer0() {
 }
 
 void init_interupt() {
-    // disable alternate functions
-    TCCR1A &= ~((1 << COM1B0) | (1 << COM1B1));
 
     MCUCR |= (1<<ISC00) | (1<<ISC01); // rising edge
-    GIMSK |= (1<<INT0); // turn on interrupts!
+
+    GIMSK |= (1<<INT0); // turn on interrupt INT0
 
 }
 
@@ -127,6 +126,7 @@ void refresh (unsigned char current_z) {
 }
 
 int main() {
+
     init_interupt();
     init_timer0();
 
@@ -155,4 +155,5 @@ int main() {
     }
 
     return 0;
+
 }
