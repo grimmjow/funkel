@@ -87,7 +87,7 @@ void apply_bank_change(int bank, int led_index) {
     // switch (on) bank apply signal
     PORTB |= (1 << bank);
 
-    // switch (off) reset bank apply signal
+    // switch (off) bank apply signal
     PORTB ^= (1 << bank);
 
 }
