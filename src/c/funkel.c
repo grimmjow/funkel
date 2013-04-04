@@ -97,7 +97,7 @@ void set_leds() {
 	apply_bank_change(BANK_0, 0);
 	apply_bank_change(BANK_1, 1);
 	apply_bank_change(BANK_2, 2);
-	apply_bank_change(BANK_3, 4);
+	apply_bank_change(BANK_3, 3);
 
 }
 
