@@ -49,7 +49,7 @@ ISR(TIMER0_OVF_vect) {
 
     time_count++;
 
-    if (time_count > 15) {
+    if (time_count > 50) {
     	time_count = 0;
     }
 
@@ -132,21 +132,21 @@ void refresh (unsigned char current_z) {
 
 int main() {
 
-    //init_interupt();
-    //init_timer0();
+    init_interupt();
+    init_timer0();
 
     DDRA  = 0xFF;
     PORTA = 0x00;
     DDRB  = (1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5);
     PORTB = 0x00;
 
-	led[0] = 0xFF;
-	led[1] = 0xFF;
-	led[2] = 0xFF;
-	led[3] = 0xFF;
+	led[0] = 0;
+	led[1] = 0;
+	led[2] = 0;
+	led[3] = 0;
     set_leds();
 
-    //sei();
+    sei();
 
     unsigned long last_z = RES_Z + 1;
     unsigned long current_z;
@@ -155,18 +155,15 @@ int main() {
 
     while (1) {
 
-		current_z++;
+    	current_z = RES_Z * get_current_time() / rotation_time;
 
-		if(current_z >= 32) {
-			current_z = 0;
-		}
-		refresh(current_z);
-
-		unsigned int count=0;
-		do {
-			count++;
-			_delay_ms(1);
-		} while(count < 10);
+    	if (current_z == last_z) {
+    	    asm("sleep"::);
+    	}
+    	else {
+    	    last_z = current_z;
+    	    refresh(current_z);
+    	}
 
     }
 
