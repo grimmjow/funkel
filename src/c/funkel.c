@@ -61,21 +61,21 @@ ISR(TIMER0_OVF_vect) {
 ISR (INT0_vect) {
 
 	// damit nich an einem vorbeilaufen an der ir-led mehrmals getriggert wird
-//    if (TCNT0L > 10 || time_count > 0) {
-//    	++rtcurrent;
-//    	if (rtcurrent == RTMAX) rtcurrent = 0;
-//    	rtcollector[rtcurrent] = get_current_time();
-//
-//    	unsigned long int rtsum = 0;
-//    	for (int i=0; i<RTMAX; i++) {
-//    		rtsum += rtcollector[i];
-//    	}
-//
-//        rotation_time = rtsum / RTMAX;
-//
-//        time_count = 0;
-//        TCNT0L = 0;
-//    }
+    if (TCNT0L > 10 || time_count > 0) {
+    	++rtcurrent;
+    	if (rtcurrent == RTMAX) rtcurrent = 0;
+    	rtcollector[rtcurrent] = get_current_time();
+
+    	unsigned long int rtsum = 0;
+    	for (int i=0; i<RTMAX; i++) {
+    		rtsum += rtcollector[i];
+    	}
+
+        rotation_time = rtsum / RTMAX;
+
+        time_count = 0;
+        TCNT0L = 0;
+    }
 
 }
 
@@ -110,11 +110,21 @@ void refresh (unsigned char current_z) {
 
 	unsigned char lisa = 0;
 
-	lisa = 1 << (time_count / 2);
-	led[0] = lisa;
-	led[1] = lisa;
-	led[2] = lisa;
-	led[3] = lisa;
+	led[0] = 0;
+	led[1] = 0;
+	led[2] = 0;
+	led[3] = 0;
+
+
+	if(current_z < 8) {
+		led[0] = (1 << current_z);
+	} else if (current_z < 16) {
+		led[1] = (1 << (current_z - 8));
+	} else if (current_z < 24) {
+		led[2] = (1 << (current_z - 16));
+	} else if (current_z < 32) {
+		led[3] = (1 << (current_z - 24));
+	}
 
     set_leds();
 
@@ -122,15 +132,21 @@ void refresh (unsigned char current_z) {
 
 int main() {
 
-    init_interupt();
-    init_timer0();
+    //init_interupt();
+    //init_timer0();
 
     DDRA  = 0xFF;
-    PORTA = 0xFF;
+    PORTA = 0x00;
     DDRB  = (1 << PB2) | (1 << PB3) | (1 << PB4) | (1 << PB5);
-    PORTB = 0xFF;
+    PORTB = 0x00;
 
-    sei();
+	led[0] = 0xFF;
+	led[1] = 0xFF;
+	led[2] = 0xFF;
+	led[3] = 0xFF;
+    set_leds();
+
+    //sei();
 
     unsigned long last_z = RES_Z + 1;
     unsigned long current_z;
@@ -138,15 +154,20 @@ int main() {
     rotation_time = 0xFF * 16;
 
     while (1) {
-        current_z = RES_Z * get_current_time() / rotation_time;
 
-        if (current_z == last_z) {
-            asm("sleep"::);
-        }
-        else {
-            last_z = current_z;
-            refresh(current_z);
-        }
+		current_z++;
+
+		if(current_z >= 32) {
+			current_z = 0;
+		}
+		refresh(current_z);
+
+		unsigned int count=0;
+		do {
+			count++;
+			_delay_ms(1);
+		} while(count < 10);
+
     }
 
     return 0;
