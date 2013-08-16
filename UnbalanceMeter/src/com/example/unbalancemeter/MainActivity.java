@@ -3,7 +3,6 @@ package com.example.unbalancemeter;
 import java.io.ByteArrayOutputStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -17,7 +16,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Paint;
-import android.graphics.PathEffect;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
@@ -29,8 +27,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.TextToSpeech.OnInitListener;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
@@ -38,9 +34,8 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-public class MainActivity extends Activity implements OnInitListener, SensorEventListener {
+public class MainActivity extends Activity implements SensorEventListener {
 	public final static String EXTRA_MESSAGE = "com.example.unbalancemeter.MESSAGE";
 	
 	private int CROP_WIDTH_PCNT_BEGIN = 45;
@@ -52,7 +47,6 @@ public class MainActivity extends Activity implements OnInitListener, SensorEven
 	private int cropHeightBegin;
 	private int cropHeightEnd;
 	
-	private TextToSpeech tts;
 	private Camera camera;
     private CameraPreview mPreview;
     private int frameCount = 0;
@@ -67,37 +61,40 @@ public class MainActivity extends Activity implements OnInitListener, SensorEven
 	private TextView colorText;
 	private TextView fpsText;
 	private TextView durationText;
-	private TextView accelText;
 	private TextView spsText;
 	private TextView sprText;
+	private TextView rpsText;
 	private ImageView imageView1;
+	private TextView editText;
+	
+	private NumberFormat decimalFormat = NumberFormat.getInstance();
 	
 	private SensorManager mSensorManager;
 	private Sensor mSensor;
 	private float[] lastSample;
+	private float[] zero;
     private Date sampleStamp = new Date();
 	private int sampleCount;
 	private int roundSampleCount;
-	private int significantSampleCount;
-	private int significantSample;
-	private List<float[]> samples = new ArrayList<float[]>();
+
 
 	
     @Override
     protected void onCreate(Bundle savedinstancestate) {
         super.onCreate(savedinstancestate);
         setContentView(R.layout.activity_main);
-//        tts = new TextToSpeech(this, this);
 
-        accelText = (TextView) findViewById(R.id.accelText);
+        // collect all GUI widgets
         spsText = (TextView) findViewById(R.id.spsEdit);
         sprText = (TextView) findViewById(R.id.sprEdit);
-
         colorText = (TextView) findViewById(R.id.colorText);
         fpsText = (TextView) findViewById(R.id.fpsText);
         durationText = (TextView) findViewById(R.id.durationText);
-        
+        rpsText = (TextView) findViewById(R.id.textRps);
         imageView1 = (ImageView) findViewById(R.id.plot);
+        editText = (TextView) findViewById(R.id.editText1);
+        
+        decimalFormat.setMaximumFractionDigits(2);
         
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -110,7 +107,6 @@ public class MainActivity extends Activity implements OnInitListener, SensorEven
         Log.i("test", "initCamera");
         camera = Camera.open(0);
         
-        TextView editText = (TextView) findViewById(R.id.editText1);
         editText.setMovementMethod(new ScrollingMovementMethod());
         StringBuilder sb = new StringBuilder();
 
@@ -161,19 +157,25 @@ public class MainActivity extends Activity implements OnInitListener, SensorEven
 //    	parameters.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
 //    	parameters.setSceneMode(Parameters.SCENE_MODE_SPORTS);
 //    	parameters.setAntibanding(Parameters.ANTIBANDING_OFF);
-//    	parameters.setColorEffect(Parameters.EFFECT_MONO);
+    	parameters.setColorEffect(Parameters.EFFECT_MONO);
     	parameters.setPreviewFormat(ImageFormat.NV21);
+    	
+    	// zoom to the max
+    	int maxZoom = parameters.getMaxZoom();
+        parameters.setZoom(maxZoom);
+        
+        // apply properties
         camera.setParameters(parameters);
         camera.setDisplayOrientation(90);
         
 		// Create our Preview view and set it as the content of our activity.
-//        Log.i("test", "start gui preview");
-//        mPreview = new CameraPreview(this, camera);
-//        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-//        preview.addView(mPreview);
-
+        Log.i("test", "start gui preview");
+        
+        // create callbackbuffer based on imageformat. We need this buffer
+        // to retrieve preview image for calulation while having it displayed
+        // on the GUI.
         byte[] callbackBuffer = new byte[imageSize.width * imageSize.height * ImageFormat.getBitsPerPixel(ImageFormat.NV21)/8 ];
-        camera.setPreviewCallbackWithBuffer(new PreviewCallback() {
+        mPreview = new CameraPreview(this, camera, new PreviewCallback() {
 			
 			@Override
 			public void onPreviewFrame(byte[] data, Camera camera) {
@@ -215,9 +217,10 @@ public class MainActivity extends Activity implements OnInitListener, SensorEven
 		        	foundBlackMark = true;
 		        	duration = System.nanoTime() - previousStamp;
 		        	sprText.setText(Integer.toString(roundSampleCount));
+		        	float rps = (1/(duration / 1000000000F));
+		        	rpsText.setText(decimalFormat.format(rps));
 		        	roundSampleCount = 0;
-		        	drawCycle(samples);
-		        	samples.clear();
+		        	drawCycle(lastSample);
 		        } if(darkening < (100 - darkeningSensitivity)) {
 		        	if(foundBlackMark) {
 		        		previousStamp = System.nanoTime();
@@ -229,20 +232,15 @@ public class MainActivity extends Activity implements OnInitListener, SensorEven
 		        camera.addCallbackBuffer(data);
 		        
 			}
-		});
-        camera.addCallbackBuffer(callbackBuffer);
-        Log.i("test", "start preview");
-        camera.startPreview();
+		}, callbackBuffer);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.addView(mPreview);    
 		
 	}
-
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		if(tts != null) {
-			tts.shutdown();
-		}
 		if(camera != null) {
 			camera.release();
 		}
@@ -255,38 +253,18 @@ public class MainActivity extends Activity implements OnInitListener, SensorEven
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
-
-    /** Called when the user clicks the Send button */
-    public void sendMessage(View view) {
-//    	Intent intent = new Intent(this, DisplayMessageActivity.class);
-//    	EditText editText = (EditText) findViewById(R.id.edit_message);
-//    	String message = editText.getText().toString();
-//    	intent.putExtra(EXTRA_MESSAGE, message);
-//        startActivity(intent);
-//        tts.speak(message, TextToSpeech.QUEUE_ADD, null);
-    }
     
-    /** Called when the user clicks the Send button */
     public void closeApp(View view) {
     	android.os.Process.killProcess(android.os.Process.myPid());
     }
 
-	@Override
-	public void onInit(int status) {
-		if (status == TextToSpeech.SUCCESS) {
-		Toast.makeText(this,
-		"Text-To-Speech engine is initialized", Toast.LENGTH_LONG).show();
-		}
-		else if (status == TextToSpeech.ERROR) {
-		Toast.makeText(this,
-		"Error occurred while initializing Text-To-Speech engine", Toast.LENGTH_LONG).show();
-		}
-		
-	}
+    public void resetZero(View view) {
+    	zero = null;
+    }
 
     protected void onResume() {
         super.onResume();
-        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     protected void onPause() {
@@ -306,21 +284,19 @@ public class MainActivity extends Activity implements OnInitListener, SensorEven
 		
 		float[] values = event.values;
 		
-		if(lastSample != null) {
-			
-			NumberFormat instance = DecimalFormat.getInstance();
-			instance.setMinimumFractionDigits(8);
-
-			StringBuilder sb = new StringBuilder();
-			sb.append("0:").append(instance.format(lastSample[0] - values[0])).append("\t(").append(values[0]).append(")\n");
-			sb.append("1:").append(instance.format(lastSample[1] - values[1])).append("\t(").append(values[1]).append(")\n");
-			sb.append("2:").append(instance.format(lastSample[2] - values[2])).append("\t(").append(values[2]).append(")\n");
-			
-			accelText.setText(sb.toString());
-			
-		}
-		
-		
+//		if(lastSample != null) {
+//			
+//			NumberFormat instance = DecimalFormat.getInstance();
+//			instance.setMinimumFractionDigits(8);
+//
+//			StringBuilder sb = new StringBuilder();
+//			sb.append("0:").append(instance.format(lastSample[0] - values[0])).append("\t(").append(values[0]).append(")\n");
+//			sb.append("1:").append(instance.format(lastSample[1] - values[1])).append("\t(").append(values[1]).append(")\n");
+//			sb.append("2:").append(instance.format(lastSample[2] - values[2])).append("\t(").append(values[2]).append(")\n");
+//			
+//			accelText.setText(sb.toString());
+//			
+//		}
 		
 		if((new Date()).getTime() - sampleStamp.getTime() > 1000) {
 	        spsText.setText(Integer.toString(sampleCount));
@@ -333,60 +309,40 @@ public class MainActivity extends Activity implements OnInitListener, SensorEven
 		roundSampleCount++;
 		
 		// have to copy, cause event.values is always the same buffer
-		float[] copyOf = Arrays.copyOf(values, values.length);
-		samples.add(copyOf);
-		lastSample = copyOf;
+		float[] copyOfValues = Arrays.copyOf(values, values.length);
+		lastSample = copyOfValues;
+		
+		if(zero == null) {
+			zero = copyOfValues;
+		}
 		
 		
-	}    
-	
-	private void drawCycle(List<float[]> samples) {
+	}
 
-		float minX=0F, maxX=0F, minY=0F, maxY=0F, resX=0F, resY=0F, res=0F;
-		
-		for(float[] sample : samples) {
+	private void drawCycle(float[] sample) {
 
-			resX += sample[0];
-			resX += sample[1];
-			
-		}		
+		if(zero == null) {
+			return;
+		}
 		
-		if(resX < 0F) resX *= -1;
-		if(resY < 0F) resY *= -1;
-		
-		resX = resX * 2F;
-		resY = resY * 2F;
-		resX = Math.max(resX, 20);
-		resY = Math.max(resY, 20);
-		res = Math.max(resY, resX);
-		res = 40;
+		float res = 40;
 		Bitmap bitmap = Bitmap.createBitmap(Math.round(res), Math.round(res), Config.RGB_565);
 		
-		Paint xPaint = new Paint();
-		xPaint.setColor(Color.BLUE);
+		Paint centerPaint = new Paint();
+		centerPaint.setColor(Color.BLUE);
 		
-		Paint yPaint = new Paint();
-		yPaint.setColor(Color.GREEN);
-		
-		Paint xyPaint = new Paint();
-		xyPaint.setColor(Color.RED);
+		Paint directionPaint = new Paint();
+		directionPaint.setColor(Color.GREEN);
 		
 		Canvas canvas = new Canvas(bitmap);
 		canvas.drawColor(Color.WHITE);
 		int midX=(int) (res/2), midY=(int) (res/2);
-		float dx=0F, dy=0F;
-		float[] last = samples.get(0);
-		dx = midX + last[0];
-		dy = midY + last[1];
-		for(float[] sample : samples) {
-			dx += (last[0] - sample[0]);
-			dy += (last[1] - sample[1]);
-			canvas.drawPoint(dx, midY, xPaint);
-			canvas.drawPoint(midX, dy, yPaint);
-			canvas.drawPoint(dx, dy, xyPaint);
-			last = sample;
-		}
+		float dx=midX, dy=midY;
+		canvas.drawPoint(midX, midY, centerPaint);
+		dx += (zero[0] - sample[0]);
+		dy += (zero[1] - sample[1]);
+		canvas.drawPoint(dx, dy, directionPaint);
 		imageView1.setImageBitmap(bitmap);
-	}
-	
+		
+	}	
 }

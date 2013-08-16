@@ -24,22 +24,24 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int TextView01=0x7f080004;
-        public static final int TextView02=0x7f080000;
-        public static final int TextView03=0x7f080006;
-        public static final int accelText=0x7f08000b;
-        public static final int action_settings=0x7f08000f;
-        public static final int button1=0x7f08000a;
+        public static final int TextView01=0x7f080006;
+        public static final int TextView02=0x7f080002;
+        public static final int TextView03=0x7f080008;
+        public static final int TextView04=0x7f080000;
+        public static final int action_settings=0x7f080011;
+        public static final int btnKill=0x7f08000f;
+        public static final int btnResetZero=0x7f080010;
         public static final int camera_preview=0x7f08000e;
-        public static final int colorText=0x7f080003;
-        public static final int durationText=0x7f080009;
+        public static final int colorText=0x7f080005;
+        public static final int durationText=0x7f08000b;
         public static final int editText1=0x7f08000c;
-        public static final int fpsText=0x7f080001;
+        public static final int fpsText=0x7f080003;
         public static final int plot=0x7f08000d;
-        public static final int sprEdit=0x7f080007;
-        public static final int spsEdit=0x7f080005;
-        public static final int textView1=0x7f080002;
-        public static final int textView2=0x7f080008;
+        public static final int sprEdit=0x7f080009;
+        public static final int spsEdit=0x7f080007;
+        public static final int textRps=0x7f080001;
+        public static final int textView1=0x7f080004;
+        public static final int textView2=0x7f08000a;
     }
     public static final class layout {
         public static final int activity_display_message=0x7f030000;
