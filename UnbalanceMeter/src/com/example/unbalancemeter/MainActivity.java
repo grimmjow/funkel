@@ -359,7 +359,7 @@ public class MainActivity extends Activity implements OnInitListener, SensorEven
 		resX = Math.max(resX, 20);
 		resY = Math.max(resY, 20);
 		res = Math.max(resY, resX);
-		
+		res = 40;
 		Bitmap bitmap = Bitmap.createBitmap(Math.round(res), Math.round(res), Config.RGB_565);
 		
 		Paint xPaint = new Paint();
@@ -374,13 +374,17 @@ public class MainActivity extends Activity implements OnInitListener, SensorEven
 		Canvas canvas = new Canvas(bitmap);
 		canvas.drawColor(Color.WHITE);
 		int midX=(int) (res/2), midY=(int) (res/2);
-		int x=midX, y=midY;
+		float dx=0F, dy=0F;
+		float[] last = samples.get(0);
+		dx = midX + last[0];
+		dy = midY + last[1];
 		for(float[] sample : samples) {
-			x += sample[0];
-			y += sample[1];
-			canvas.drawPoint(x, midY, xPaint);
-			canvas.drawPoint(midX, y, yPaint);
-			canvas.drawPoint(x, y, xyPaint);
+			dx += (last[0] - sample[0]);
+			dy += (last[1] - sample[1]);
+			canvas.drawPoint(dx, midY, xPaint);
+			canvas.drawPoint(midX, dy, yPaint);
+			canvas.drawPoint(dx, dy, xyPaint);
+			last = sample;
 		}
 		imageView1.setImageBitmap(bitmap);
 	}
