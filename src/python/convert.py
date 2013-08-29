@@ -12,28 +12,31 @@ def printHelp():
 imageFile = "test.jpg"
 template = "imgdata.h.template"
 outputFile = "imgdata.h"
-resolution = {"x": 16, "z": 32, "t": 1}
+resolution = {"y": 32, "l": 16, "t": 32}
+layer = 0
 
 for arg in sys.argv:
     if (arg[:5] == "-img:"):
         imageFile = arg[5:]
 
-    elif (arg[:3] == "-x:") and (arg[3:].isdigit()):
-        if int(arg[3:]) % 16 == 0:
-            resolution["x"] = int(arg[3:])
-
-    elif (arg[:3] == "-z:") and (arg[3:].isdigit()):
-        resolution["z"] = int(arg[3:])
-
     elif (arg[:3] == "-t:") and (arg[3:].isdigit()):
         resolution["t"] = int(arg[3:])
+
+    elif (arg[:3] == "-l:") and (arg[3:].isdigit()):
+        layer = int(arg[3:])
 
     elif (arg == "-h") or (arg == "--help"):
         printHelp()
 
+
+t_offset = (resolution["t"] * 1.0 / resolution["l"]) * layer;
+
 print "file:", imageFile
-print "x:", resolution["x"]
-print "z:", resolution["z"]
+print "y:", resolution["y"]
+print "l:", resolution["l"]
+print "t:", resolution["t"]
+print "layer:", layer
+print "t_offset:", t_offset
 
 img = Image.open(imageFile)
 pix = img.load()
@@ -43,11 +46,12 @@ radius = min(size[0] / 2, size[1] / 2)
 output = []
 
 # initialisiere verschachtelte Listen mit Tuples (colorcount, pixelcount)
-for z in range(resolution["z"]):
+for t in range(resolution["t"]):
     last = []
     output.append(last)
-    for x in range(resolution["x"]):
+    for y in range(resolution["y"]):
         last.append([0, 0])
+
 
 # Pixel des Bildes durchlaufen
 for imgx in range(1, size[0]):
@@ -71,35 +75,41 @@ for imgx in range(1, size[0]):
         if (a < 0  and b > 0):
             deg *= -1
 
-        z = int(round(((360 + deg) % 360) * (resolution["z"]-1) / 360))
-        x = int(round(c * (resolution["x"]-1) / radius))
-        output[z][x][0] += pix[imgx, imgy]
-        output[z][x][1] += 1
+        t = ((360 + deg) % 360) * (resolution["t"]-1) / 360
+        t = int(round(t + t_offset)) % resolution["t"]
+
+        l = int(round(c * (resolution["l"]-1) / radius))
+        y = 0
+
+        if l == layer:
+            output[t][y][0] += pix[imgx, imgy]
+            output[t][y][1] += 1
 
 # average value determination
-for z in range(resolution["z"]):
-    for x in range(resolution["x"]):
-        if output[z][x][1] > 0:
-            output[z][x][0] = output[z][x][0] / output[z][x][1]
-        output[z][x][0] = int(round(output[z][x][0] / 128))
+for t in range(resolution["t"]):
+    for y in range(resolution["y"]):
+        if output[t][y][1] > 0:
+            output[t][y][0] = output[t][y][0] / output[t][y][1]
+        output[t][y][0] = int(round(output[t][y][0] / 128))
 
-        sys.stdout.write(str(output[z][x][0]))
-    print ""
-print ""
+        #sys.stdout.write(str(output[t][y][0]))
+    #print ""
+#print ""
 
 # export array
 imgdata = "{\n"
-for z in range(resolution["z"]):
+for t in range(resolution["t"]):
 
     imgdata += "{0b"
 
-    for x in range(resolution["x"] / 2):
-        imgdata += str(output[z][x * 2 + 1][0])
+    for y in range(resolution["y"] / 8):
+        if y > 0:
+            imgdata += ", 0b"
+            
+        for i in range(8):
+            # imgdata += str(output[t][y * 8 + i][0])
+            imgdata += str(output[t][0][0])
 
-    imgdata += ", 0b"
-
-    for x in range(resolution["x"] / 2):
-        imgdata += str(output[(z + resolution["z"] / 2) % resolution["z"]][x * 2][0])
 
     imgdata += "},\n"
 
@@ -110,8 +120,7 @@ content = f.read()
 f.close()
 
 content = content.replace("$IMGDATA", imgdata)
-content = content.replace("$RES_X", str(resolution["x"]))
-content = content.replace("$RES_Z", str(resolution["z"]))
+content = content.replace("$RES_Y", str(resolution["y"]))
 content = content.replace("$RES_T", str(resolution["t"]))
 
 f = open(outputFile, "w")

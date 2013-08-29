@@ -1,7 +1,7 @@
 #!/bin/bash
 
-count=1;
-max=32;
+count=0;
+max=15;
 
 while [ $count -le $max ]; do
 
@@ -10,26 +10,20 @@ while [ $count -le $max ]; do
 	echo "#################"
 	echo ""
 
-	./build.sh
+	./build.sh -l $count
 	rc=$?
 
-	if [ "$rc" -ne 0 ]; then
-
-		while [ $rc != 0 ]; do
-			echo "failed, retry [Y/n]?"
-			read entry
-			if [ "$entry" != "n" ]; then
-				./build.sh
-				rc=$?
-			else
-				rc=0
-			fi
-		done
-	else
+	if [ "$rc" -eq 0 ]; then
+    	count=$(( count + 1))
 		echo "done, [enter] for next"
 		read entry
+    else
+    	echo "failed, retry [Y/n]?"
+		read entry
+		if [ "$entry" == "n" ]; then
+        	count=$(( count + 1))
+		fi
 	fi
 
-	count=$(( count + 1))
 done
 

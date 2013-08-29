@@ -4,7 +4,7 @@
 #define RES_X             32
 #define RES_Z             32
 
-unsigned char imgdata[RES_Z][RES_X/8] PROGMEM =
+unsigned const char imgdata[RES_Z][RES_X/8] PROGMEM =
                           {
                         			{0b11011111, 0b10001110},
                         			{0b11011111, 0b10000010},

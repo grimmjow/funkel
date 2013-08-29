@@ -1,9 +1,9 @@
 #ifndef IMGDATA_H_
 #define IMGDATA_H_
 
-#define RES_X             $RES_X
-#define RES_Z             $RES_Z
+#define RES_Y             $RES_Y
+#define RES_T             $RES_T
 
-unsigned char imgdata[RES_Z][RES_X/8] PROGMEM = $IMGDATA;
+unsigned const char imgdata[RES_T][RES_Y/8] PROGMEM = $IMGDATA;
 
 #endif /*IMGDATA_H_*/

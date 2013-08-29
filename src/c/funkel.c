@@ -5,7 +5,7 @@
 
 #include "imgdata.h"
 
-unsigned char led[RES_X/8];
+unsigned char led[RES_Y/8];
 unsigned long int rotation_time = 1;
 unsigned long int time_count = 1;
 
@@ -101,31 +101,30 @@ void set_leds() {
 
 }
 
-void refresh (unsigned char current_z) {
+void refresh (unsigned char current_t) {
 
-	//    led[0] = pgm_read_byte(&(imgdata[current_z][3]));
-	//    led[1] = pgm_read_byte(&(imgdata[current_z][2]));
-	//    led[2] = pgm_read_byte(&(imgdata[current_z][1]));
-	//    led[3] = pgm_read_byte(&(imgdata[current_z][0]));
+    led[0] = pgm_read_byte(&(imgdata[current_t][3]));
+    led[1] = pgm_read_byte(&(imgdata[current_t][2]));
+    led[2] = pgm_read_byte(&(imgdata[current_t][1]));
+    led[3] = pgm_read_byte(&(imgdata[current_t][0]));
 
-	unsigned char lisa = 0;
-
+/*
 	led[0] = 0;
 	led[1] = 0;
 	led[2] = 0;
 	led[3] = 0;
 
 
-	if(current_z < 8) {
-		led[0] = (1 << current_z);
-	} else if (current_z < 16) {
-		led[1] = (1 << (current_z - 8));
-	} else if (current_z < 24) {
-		led[2] = (1 << (current_z - 16));
-	} else if (current_z < 32) {
-		led[3] = (1 << (current_z - 24));
+	if(current_t < 8) {
+		led[0] = (1 << current_t);
+	} else if (current_t < 16) {
+		led[1] = (1 << (current_t - 8));
+	} else if (current_t < 24) {
+		led[2] = (1 << (current_t - 16));
+	} else if (current_t < 32) {
+		led[3] = (1 << (current_t - 24));
 	}
-
+*/
     set_leds();
 
 }
@@ -148,21 +147,21 @@ int main() {
 
     sei();
 
-    unsigned long last_z = RES_Z + 1;
-    unsigned long current_z;
+    unsigned long last_t = RES_T + 1;
+    unsigned long current_t;
 
     rotation_time = 0xFF * 16;
 
     while (1) {
 
-    	current_z = RES_Z * get_current_time() / rotation_time;
+    	current_t = RES_T * get_current_time() / rotation_time;
 
-    	if (current_z == last_z) {
+    	if (current_t == last_t) {
     	    asm("sleep"::);
     	}
     	else {
-    	    last_z = current_z;
-    	    refresh(current_z);
+    	    last_t = current_t;
+    	    refresh(current_t);
     	}
 
     }
