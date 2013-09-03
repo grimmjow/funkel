@@ -1,8 +1,8 @@
 package com.example.unbalancemeter;
 
 import java.io.ByteArrayOutputStream;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -38,8 +38,8 @@ import android.widget.TextView;
 public class MainActivity extends Activity implements SensorEventListener {
 	public final static String EXTRA_MESSAGE = "com.example.unbalancemeter.MESSAGE";
 	
-	private int CROP_WIDTH_PCNT_BEGIN = 45;
-	private int CROP_WIDTH_PCNT_END = 55;
+	private int CROP_WIDTH_PCNT_BEGIN = 0;
+	private int CROP_WIDTH_PCNT_END = 100;
 	private int CROP_HEIGHT_PCNT_BEGIN = 45;
 	private int CROP_HEIGHT_PCNT_END = 55;
 	private int cropWidthBegin;
@@ -51,7 +51,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private CameraPreview mPreview;
     private int frameCount = 0;
     private Date frameStamp = new Date();
-    private int darkeningSensitivity = 4;
+    private int darkeningSensitivity = 15;
     
     private boolean foundBlackMark;
     private int lastAvrg;
@@ -76,6 +76,8 @@ public class MainActivity extends Activity implements SensorEventListener {
     private Date sampleStamp = new Date();
 	private int sampleCount;
 	private int roundSampleCount;
+	
+	private List<Double> intenses = new ArrayList<Double>();
 
 
 	
@@ -341,6 +343,17 @@ public class MainActivity extends Activity implements SensorEventListener {
 		canvas.drawPoint(midX, midY, centerPaint);
 		dx += (zero[0] - sample[0]);
 		dy += (zero[1] - sample[1]);
+		if(intenses.size() == 40) {
+			intenses.remove(0);
+		}
+		intenses.add(Math.sqrt((Math.sqrt(Math.abs(zero[0] - sample[0])) + Math.sqrt(Math.abs(zero[1] - sample[1])))));
+		
+		double intense =0D;
+		for(double intenseSample : intenses) {
+			intense += intenseSample;
+		}
+		
+		editText.setText("intense: " + intense/intenses.size() + "\nz: " + (zero[2] - sample[2]));
 		canvas.drawPoint(dx, dy, directionPaint);
 		imageView1.setImageBitmap(bitmap);
 		
