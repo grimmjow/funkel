@@ -62,7 +62,7 @@ avr-objcopy -R .eeprom -O ihex ${program}.elf  "${program}.hex"
 avr-size --format=avr --mcu=${mcu} ${program}.elf
 
 if [ "$noflash" != "1" ]; then
-    sudo /usr/bin/avrdude -p${dude_mcu} -cavrisp2 -Pusb -F -Uflash:w:${program}.hex:a
+    sudo /usr/bin/avrdude -p${dude_mcu} -cavrisp2 -Pusb -Uflash:w:${program}.hex:a
 
     if [ "$debug" != "1" ]; then
         rm ${program}.* imgdata.*
