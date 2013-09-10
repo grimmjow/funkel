@@ -101,7 +101,7 @@ void set_leds() {
 
 }
 
-void refresh (unsigned char current_t) {
+void refresh (unsigned int current_t) {
 
     led[0] = pgm_read_byte(&(imgdata[current_t][3]));
     led[1] = pgm_read_byte(&(imgdata[current_t][2]));
@@ -147,14 +147,14 @@ int main() {
 
     sei();
 
-    unsigned long last_t = RES_T + 1;
-    unsigned long current_t;
+    unsigned int last_t = RES_T + 1;
+    unsigned int current_t;
 
     rotation_time = 0xFF * 16;
 
     while (1) {
 
-    	current_t = RES_T * get_current_time() / rotation_time;
+	current_t = (RES_T * get_current_time() / rotation_time) % RES_T;
 
     	if (current_t == last_t) {
     	    asm("sleep"::);
