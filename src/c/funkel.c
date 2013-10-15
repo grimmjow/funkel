@@ -75,17 +75,17 @@ void set_leds() {
 }
 
 void display_image_data () {
-    
+    /*
     led[0] = myswitch;
     led[1] = (uint8_t)time_index;
     led[2] = ~myswitch;
     led[3] = ~myswitch;
-
+    */
     // read data from program memory into led arrays
-    //led[0] = imgdata[time_index][3];
-    //led[1] = imgdata[time_index][2];
-    //led[2] = led[0];
-    //led[3] = led[0];
+    led[0] = imgdata[time_index][3];
+    led[1] = imgdata[time_index][2];
+    led[2] = imgdata[time_index][1];
+    led[3] = imgdata[time_index][0];
 
     set_leds();
 
@@ -195,7 +195,7 @@ int main() {
             if (time > rotation_time) {
                 display_standby(0xF0);
             } else {
-                display_time_index(time_index);
+                display_image_data();
             }
             
         }
