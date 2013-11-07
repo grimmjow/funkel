@@ -10,7 +10,7 @@ l=0
 noflash=0
 
 # target device specification
-mcu=attiny461a
+mcu=attiny461
 dude_mcu=t461
 
 # prgramm name

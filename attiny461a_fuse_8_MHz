@@ -1,0 +1,3 @@
+sudo /usr/bin/avrdude -pt461 -cavrisp2 -Pusb -U lfuse:w:0xE2:m -U hfuse:w:0xdf:m 
+# -U efuse:w:0xff:m
+

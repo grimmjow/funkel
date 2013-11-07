@@ -4,6 +4,6 @@
 #define RES_Y             $RES_Y
 #define RES_T             $RES_T
 
-unsigned const char imgdata[RES_T][RES_Y/8] = $IMGDATA;
+unsigned const char  PROGMEM imgdata[RES_T][RES_Y/8] = $IMGDATA;
 
 #endif /*IMGDATA_H_*/
