@@ -1,128 +1,91 @@
 #!/bin/python
 
 import os,sys
-import Image
 import math
+from stl import Stl
 
+
+class Convert:
+
+    bound_min = [] #x, z, y
+    bound_max = []
+    trian = []
+    resolution = {}
+    offset = []
+    ratio = 1
+
+    def __init__(self, trian, resolution):
+        self.trian = trian
+        self.resolution = resolution
+
+    def getBoundries(self):
+        self.bound_min = [self.trian[0][0][0], self.trian[0][0][1], self.trian[0][0][2]] #erster punkt im ersten dreieck
+        self.bound_max = [self.trian[0][0][0], self.trian[0][0][1], self.trian[0][0][2]] #erster punkt im ersten dreieck
+
+        for t in trian:
+            for p in t:
+                self.bound_min[0] = min(self.bound_min[0], p[0])
+                self.bound_min[1] = min(self.bound_min[1], p[1])
+                self.bound_min[2] = min(self.bound_min[2], p[2])
+
+                self.bound_max[0] = max(self.bound_max[0], p[0])
+                self.bound_max[1] = max(self.bound_max[1], p[1])
+                self.bound_max[2] = max(self.bound_max[2], p[2])
+
+        self.offset = []
+        for ii in range(3):
+            self.offset.append((self.bound_min[ii] + self.bound_max[ii]) / 2)
+
+        self.ratio = min(self.resolution["x"] * 2 / (self.bound_max[0] - self.bound_min[0]),
+                         self.resolution["x"] * 2 / (self.bound_max[1] - self.bound_min[1]),
+                         self.resolution["y"] / (self.bound_max[2] - self.bound_min[2]))
+
+        print self.ratio
+        print self.bound_min
+        print self.bound_max
+        print self.offset
 
 def printHelp():
-    print "use: convert.py -img:file.jpg"
+    print "use: convert.py -stl:file.stl -t:52 -x:2"
 
 
-imageFile = "test.jpg"
+stl_file = "test.stl"
 template = "imgdata.h.template"
 outputFile = "imgdata.h"
-resolution = {"y": 32, "l": 16, "t": 32}
+resolution = {"y": 32, "x": 16, "t": 32}
 layer = 0
 
 for arg in sys.argv:
-    if (arg[:5] == "-img:"):
+    if (arg[:5] == "-stl:"):
         imageFile = arg[5:]
 
     elif (arg[:3] == "-t:") and (arg[3:].isdigit()):
         resolution["t"] = int(arg[3:])
 
-    elif (arg[:3] == "-l:") and (arg[3:].isdigit()):
+    elif (arg[:3] == "-x:") and (arg[3:].isdigit()):
         layer = int(arg[3:])
 
     elif (arg == "-h") or (arg == "--help"):
         printHelp()
 
 
-t_offset = (resolution["t"] * 1.0 / resolution["l"]) * layer;
+t_offset = (resolution["t"] * 1.0 / resolution["x"]) * layer;
 
-print "file:", imageFile
+print "file:", stl_file
 print "y:", resolution["y"]
-print "l:", resolution["l"]
+print "x:", resolution["x"]
 print "t:", resolution["t"]
 print "layer:", layer
 print "t_offset:", t_offset
 
-img = Image.open(imageFile)
-pix = img.load()
-size = img.size
-radius = min(size[0] / 2, size[1] / 2)
+trian = Stl.read(stl_file)
 
-output = []
+if not len(trian):
+    exit -1
 
-# initialisiere verschachtelte Listen mit Tuples (colorcount, pixelcount)
-for t in range(resolution["t"]):
-    last = []
-    output.append(last)
-    for y in range(resolution["y"]):
-        last.append([0, 0])
+converter = Convert(trian, resolution)
+converter.getBoundries()
 
 
-# Pixel des Bildes durchlaufen
-for imgx in range(1, size[0]):
-    for imgy in range(1, size[1]):
-        if pix[imgx, imgy] == 0:
-            continue
+print trian
 
-        a = imgx - (size[0] / 2)
-        b = imgy - (size[1] / 2)
-        c = math.sqrt(math.pow(a, 2) + math.pow(b, 2))
-
-        if c > radius or c == 0:
-            continue
-
-        deg = math.degrees(math.asin(abs(a)/c))
-
-        if (a > 0 and b < 0):
-            deg = deg * -1 + 180
-        if (a < 0 and b < 0):
-            deg += 180
-        if (a < 0  and b > 0):
-            deg *= -1
-
-        t = ((360 + deg) % 360) * (resolution["t"]-1) / 360
-        t = int(round(t + t_offset)) % resolution["t"]
-
-        l = int(round(c * (resolution["l"]-1) / radius))
-        y = 0
-
-        if l == layer:
-            output[t][y][0] += pix[imgx, imgy]
-            output[t][y][1] += 1
-
-# average value determination
-for t in range(resolution["t"]):
-    for y in range(resolution["y"]):
-        if output[t][y][1] > 0:
-            output[t][y][0] = output[t][y][0] / output[t][y][1]
-        output[t][y][0] = int(round(output[t][y][0] / 128))
-
-        #sys.stdout.write(str(output[t][y][0]))
-    #print ""
-#print ""
-
-# export array
-imgdata = "{\n"
-for t in range(resolution["t"]):
-
-    imgdata += "{0b"
-
-    for y in range(resolution["y"] / 8):
-        if y > 0:
-            imgdata += ", 0b"
-            
-        for i in range(8):
-            # imgdata += str(output[t][y * 8 + i][0])
-            imgdata += str(output[t][0][0])
-
-
-    imgdata += "},\n"
-
-imgdata = imgdata[:-2] + "}"
-
-f = open(template, "r")
-content = f.read()
-f.close()
-
-content = content.replace("$IMGDATA", imgdata)
-content = content.replace("$RES_Y", str(resolution["y"]))
-content = content.replace("$RES_T", str(resolution["t"]))
-
-f = open(outputFile, "w")
-f.write(content)
-f.close()
